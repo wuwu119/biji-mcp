@@ -1,0 +1,14 @@
+{
+  "knowledge_bases": {
+    "工作": {
+      "token": "your-api-token-here",
+      "topic_id": "your-topic-id-here",
+      "description": "工作相关笔记"
+    }
+  },
+  "default": "工作",
+  "settings": {
+    "default_top_k": 10,
+    "timeout": 30
+  }
+}
