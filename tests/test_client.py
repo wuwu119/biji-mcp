@@ -2,7 +2,7 @@
 import pytest
 import httpx
 from unittest.mock import AsyncMock, patch
-from biji_mcp.client import BijiClient, RecallResult, BijiAPIError
+from biji_mcp.client import BijiClient, RecallResult, BijiAPIError, SearchResult, Reference
 
 
 class TestRecallResult:
@@ -93,3 +93,48 @@ class TestBijiClientRecall:
                 await client.recall("问题", "kb_123")
 
             assert exc_info.value.status_code == 429
+
+
+class TestSearchResult:
+    def test_basic_properties(self):
+        result = SearchResult(
+            answer="这是答案",
+            references=[
+                Reference(title="笔记1", content="片段1"),
+            ],
+            thinking=None,
+        )
+        assert result.answer == "这是答案"
+        assert len(result.references) == 1
+
+
+class TestBijiClientSearch:
+    @pytest.fixture
+    def client(self):
+        return BijiClient(token="test-token", timeout=30)
+
+    @pytest.mark.asyncio
+    async def test_search_parses_stream(self, client):
+        # 模拟流式响应
+        stream_lines = [
+            'data: {"msg_type": 1, "content": "这是"}',
+            'data: {"msg_type": 1, "content": "答案"}',
+            'data: {"msg_type": 105, "refs": [{"title": "笔记1", "content": "片段"}]}',
+            'data: {"msg_type": 3}',
+        ]
+
+        async def mock_stream(*args, **kwargs):
+            for line in stream_lines:
+                yield line
+
+        with patch.object(client, "_stream_post", mock_stream):
+            result = await client.search(
+                question="测试问题",
+                topic_id="kb_123",
+                deep_seek=False,
+                refs=True,
+            )
+
+            assert result.answer == "这是答案"
+            assert len(result.references) == 1
+            assert result.references[0].title == "笔记1"
