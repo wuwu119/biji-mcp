@@ -115,11 +115,11 @@ class TestBijiClientSearch:
 
     @pytest.mark.asyncio
     async def test_search_parses_stream(self, client):
-        # 模拟流式响应
+        # 模拟流式响应 - 使用实际 API 格式
         stream_lines = [
-            'data: {"msg_type": 1, "content": "这是"}',
-            'data: {"msg_type": 1, "content": "答案"}',
-            'data: {"msg_type": 105, "refs": [{"title": "笔记1", "content": "片段"}]}',
+            'data: {"msg_type": 1, "data": {"msg": "这是"}}',
+            'data: {"msg_type": 1, "data": {"msg": "答案"}}',
+            'data: {"msg_type": 105, "data": {"ref_list": [{"title": "笔记1", "content": "片段"}]}}',
             'data: {"msg_type": 3}',
         ]
 

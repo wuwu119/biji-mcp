@@ -1,12 +1,12 @@
 {
   "knowledge_bases": {
-    "工作": {
+    "AI产品": {
       "token": "your-api-token-here",
       "topic_id": "your-topic-id-here",
-      "description": "工作相关笔记"
+      "description": "AI产品的培训课程"
     }
   },
-  "default": "工作",
+  "default": "AI产品",
   "settings": {
     "default_top_k": 10,
     "timeout": 30

@@ -140,8 +140,16 @@ class BijiClient:
         response = await self._post("/knowledge/search/recall", json=payload)
 
         results = []
-        if "data" in response and "results" in response["data"]:
-            for item in response["data"]["results"]:
+        # API 响应格式: {"h": {...}, "c": {"data": [...]}}
+        data_list = None
+        if "c" in response and "data" in response["c"]:
+            data_list = response["c"]["data"]
+        elif "data" in response and "results" in response["data"]:
+            # 兼容旧格式
+            data_list = response["data"]["results"]
+
+        if data_list:
+            for item in data_list:
                 results.append(RecallResult.from_api(item))
 
         return results
@@ -216,24 +224,27 @@ class BijiClient:
                 continue
 
             msg_type = data.get("msg_type")
+            inner_data = data.get("data", {})
 
             if msg_type == 1:
-                # 答案内容
-                content = data.get("content", "")
-                answer_parts.append(content)
-                if self._debug:
-                    logger.debug(f"答案片段: {content}")
+                # 答案内容 - 格式: {"data": {"msg": "..."}}
+                content = inner_data.get("msg", "") if isinstance(inner_data, dict) else ""
+                if content:
+                    answer_parts.append(content)
+                    if self._debug:
+                        logger.debug(f"答案片段: {content}")
 
             elif msg_type == 21:
                 # 深度思考
-                content = data.get("content", "")
-                thinking_parts.append(content)
-                if self._debug:
-                    logger.debug(f"思考片段: {content}")
+                content = inner_data.get("msg", "") if isinstance(inner_data, dict) else ""
+                if content:
+                    thinking_parts.append(content)
+                    if self._debug:
+                        logger.debug(f"思考片段: {content}")
 
             elif msg_type == 105:
-                # 引用数据
-                refs_data = data.get("refs", [])
+                # 引用数据 - 格式: {"data": {"ref_list": [...]}}
+                refs_data = inner_data.get("ref_list", []) if isinstance(inner_data, dict) else []
                 for ref in refs_data:
                     references.append(Reference.from_api(ref))
                 if self._debug:
